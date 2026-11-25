@@ -1,0 +1,18 @@
+{
+  "name": "المطعم المدرسي",
+  "short_name": "المطعم",
+  "description": "تسجيل وجبات الغداء ببطاقة QR — يعمل بدون إنترنت",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12284c",
+  "theme_color": "#12284c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

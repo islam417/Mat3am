@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12284c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="المطعم المدرسي">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>المطعم المدرسي</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-title" id="orgTitle">المطعم المدرسي</div>
+  <div class="top-date" id="todayLabel"></div>
+</header>
+
+<div id="banner" class="banner" hidden></div>
+
+<main>
+
+  <!-- ============ المسح ============ -->
+  <section id="view-scan" class="view">
+    <div class="stats">
+      <div class="stat"><b id="stTook">0</b><span>وجبات اليوم</span></div>
+      <div class="stat"><b id="stTotal">0</b><span>التلاميذ</span></div>
+      <div class="stat"><b id="stLeft">0</b><span>لم يتناولوا</span></div>
+    </div>
+
+    <div id="result" class="result idle" aria-live="polite">
+      <div class="r-icon" id="rIcon">⌁</div>
+      <div class="r-main" id="rMain">جاهز للمسح</div>
+      <div class="r-sub" id="rSub">امسح البطاقة بالكاميرا أو بقارئ الباركود</div>
+    </div>
+
+    <div class="card cam-card">
+      <div class="cam-box" id="camBox" hidden>
+        <video id="camVideo" playsinline muted autoplay></video>
+        <div class="cam-frame"></div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCam">📷 تشغيل الكاميرا</button>
+        <button class="btn" id="btnTorch" hidden>🔦</button>
+      </div>
+      <p class="hint" id="camHint">قارئ USB: يعمل مباشرة، وجّهه إلى البطاقة دون الحاجة للنقر على أي حقل.</p>
+    </div>
+
+    <div class="card">
+      <h3>تسجيل يدوي (نسيَ بطاقته)</h3>
+      <input type="search" id="manualSearch" class="input" placeholder="ابحث بالاسم…" autocomplete="off">
+      <div id="manualResults" class="list"></div>
+    </div>
+
+    <div class="card">
+      <h3>آخر التسجيلات اليوم</h3>
+      <div id="recentList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- ============ التلاميذ ============ -->
+  <section id="view-students" class="view" hidden>
+    <div class="card">
+      <div class="row wrap">
+        <button class="btn primary" id="btnAddStudent">＋ إضافة تلميذ</button>
+        <button class="btn" id="btnImport">📋 استيراد من Excel</button>
+      </div>
+      <div class="row">
+        <input type="search" id="stuSearch" class="input" placeholder="بحث بالاسم أو الرمز…" autocomplete="off">
+        <select id="stuClass" class="input narrow"><option value="">كل الأقسام</option></select>
+      </div>
+      <div class="muted" id="stuCount"></div>
+      <div id="stuList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- ============ البطاقات ============ -->
+  <section id="view-cards" class="view" hidden>
+    <div class="card">
+      <h3>اختيار التلاميذ</h3>
+      <label class="radio"><input type="radio" name="cardScope" value="all" checked> كل التلاميذ</label>
+      <label class="radio"><input type="radio" name="cardScope" value="class"> قسم محدد</label>
+      <select id="cardClass" class="input" hidden></select>
+      <label class="radio"><input type="radio" name="cardScope" value="pick"> تلاميذ محدّدون</label>
+      <div id="cardPick" hidden>
+        <input type="search" id="cardPickSearch" class="input" placeholder="بحث…" autocomplete="off">
+        <div class="row wrap"><button class="btn small" id="cardPickAll">تحديد الكل</button><button class="btn small" id="cardPickNone">إلغاء التحديد</button></div>
+        <div id="cardPickList" class="list pick-list"></div>
+      </div>
+      <div class="muted" id="cardCount"></div>
+    </div>
+    <div class="card">
+      <h3>معاينة</h3>
+      <canvas id="cardPreview" class="card-preview"></canvas>
+    </div>
+    <div class="card">
+      <button class="btn primary big" id="btnMakePdf">إنشاء ملف PDF وحفظه</button>
+      <div class="muted" id="pdfStatus">10 بطاقات في كل ورقة A4 (85.6×54 مم) مع خطوط القص.</div>
+      <div class="row wrap" id="pdfDone" hidden>
+        <a class="btn" id="pdfSave" download>⬇ حفظ الملف</a>
+        <a class="btn" id="pdfOpen" target="_blank" rel="noopener">فتح الملف</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ التقارير ============ -->
+  <section id="view-reports" class="view" hidden>
+    <div class="seg">
+      <button class="seg-btn active" data-rep="day">تقرير اليوم</button>
+      <button class="seg-btn" data-rep="month">حصيلة الشهر</button>
+    </div>
+
+    <div id="rep-day">
+      <div class="card">
+        <div class="row"><label class="lbl">التاريخ</label><input type="date" id="repDate" class="input"></div>
+        <div class="stats mini">
+          <div class="stat ok"><b id="rdTook">0</b><span>تناولوا</span></div>
+          <div class="stat bad"><b id="rdLeft">0</b><span>لم يتناولوا</span></div>
+          <div class="stat"><b id="rdTotal">0</b><span>المجموع</span></div>
+        </div>
+        <button class="btn" id="btnCsvDay">⬇ تصدير CSV لهذا اليوم</button>
+      </div>
+      <div id="repDayList"></div>
+    </div>
+
+    <div id="rep-month" hidden>
+      <div class="card">
+        <div class="row"><label class="lbl">الشهر</label><input type="month" id="repMonth" class="input"></div>
+        <div class="stats mini">
+          <div class="stat"><b id="rmMeals">0</b><span>مجموع الوجبات</span></div>
+          <div class="stat"><b id="rmDays">0</b><span>أيام الخدمة</span></div>
+          <div class="stat"><b id="rmAvg">0</b><span>المعدّل اليومي</span></div>
+        </div>
+        <button class="btn" id="btnCsvMonth">⬇ تصدير CSV للشهر</button>
+      </div>
+      <div id="repMonthBody"></div>
+    </div>
+  </section>
+
+  <!-- ============ الإعدادات ============ -->
+  <section id="view-settings" class="view" hidden>
+    <div class="card">
+      <h3>المؤسسة</h3>
+      <label class="lbl" for="setOrg">اسم المؤسسة (يظهر على البطاقات)</label>
+      <input type="text" id="setOrg" class="input" placeholder="مثال: متوسطة الأمير عبد القادر">
+      <button class="btn primary" id="btnSaveOrg">حفظ</button>
+    </div>
+    <div class="card">
+      <h3>التنبيهات</h3>
+      <label class="switch"><input type="checkbox" id="setSound"> <span>الصوت</span></label>
+      <label class="switch"><input type="checkbox" id="setVibrate"> <span>الاهتزاز</span></label>
+      <button class="btn small" id="btnTestSound">تجربة</button>
+    </div>
+    <div class="card">
+      <h3>النسخ الاحتياطي</h3>
+      <div class="muted" id="backupInfo"></div>
+      <div class="row wrap">
+        <button class="btn primary" id="btnBackup">⬇ حفظ نسخة احتياطية (JSON)</button>
+        <button class="btn" id="btnRestore">⬆ استرجاع من ملف</button>
+      </div>
+      <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+      <p class="hint">البيانات مخزّنة على هذا الجهاز فقط. احتفظ بنسخة احتياطية خارجه (واتساب، بريد، حاسوب).</p>
+    </div>
+    <div class="card danger">
+      <h3>حذف البيانات</h3>
+      <div class="row wrap">
+        <button class="btn danger-btn" id="btnDelLogs">حذف سجلات الوجبات</button>
+        <button class="btn danger-btn" id="btnDelAll">حذف كل البيانات</button>
+      </div>
+    </div>
+    <div class="muted center" id="verInfo"></div>
+  </section>
+
+</main>
+
+<nav class="tabs" id="tabs">
+  <button data-view="scan" class="active"><i>📷</i><span>مسح</span></button>
+  <button data-view="students"><i>👥</i><span>التلاميذ</span></button>
+  <button data-view="cards"><i>🪪</i><span>البطاقات</span></button>
+  <button data-view="reports"><i>📊</i><span>التقارير</span></button>
+  <button data-view="settings"><i>⚙️</i><span>الإعدادات</span></button>
+</nav>
+
+<div id="flash"></div>
+<div id="modalRoot"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="qrcode.js"></script>
+<script src="jsQR.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
